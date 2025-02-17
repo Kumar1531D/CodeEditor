@@ -20,11 +20,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/editor/editor.main.js"></script>
 
     <script>
+    	const username = sessionStorage.getItem("username");
+    	console.log(`Welcome, ${username}!`);
         let editor;
         window.onload = function() {
             editor = monaco.editor.create(document.getElementById('editor'), {
                 value: "// Write your code here",
-                language: "javascript",
+                language: "java",
                 theme: "vs-dark"
             });
         };
