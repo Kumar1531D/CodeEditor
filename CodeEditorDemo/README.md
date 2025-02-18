@@ -65,7 +65,7 @@ Login
 
 ![Screenshot (246)](https://github.com/user-attachments/assets/7226e6ae-532d-43c4-9846-340a52644900)
 
-HomePage
+HomePage (Only the files that they are allowed to edit will be visible here)
 
 ![Screenshot (247)](https://github.com/user-attachments/assets/72d0278a-2006-4f1d-a4f0-a36c6af2a126)
 
