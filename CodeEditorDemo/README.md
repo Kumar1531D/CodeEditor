@@ -47,7 +47,7 @@ Start the Tomcat server.
 
 4️⃣ Run the Frontend
 
-Simply open index.html in a browser.
+Simply open login.html in a browser.
 
 🛠️ Usage Guide
 
