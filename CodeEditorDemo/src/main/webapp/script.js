@@ -24,12 +24,53 @@ require(['vs/editor/editor.main'], function() {
 		}
 	});
 
+	document.getElementById("run-button").addEventListener("click", function() {
+		editor.trigger('keyboard', 'type', ''); // Force Monaco to register changes
+		let code = editor.getValue();
+
+		console.log("Sending Code to Server:\n" + code);
+
+		fetch("/CodeEditorDemo/execute", {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: "code=" + encodeURIComponent(code) + "&timestamp=" + new Date().getTime() // Prevent caching
+		})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error("Server response was not OK");
+				}
+				return response.text();
+			})
+			.then(output => {
+				console.log("Output from Server:\n" + output);
+				document.getElementById("output").innerText = output ?? "✅ Code ran successfully!";
+			})
+			.catch(error => document.getElementById("output").innerText = `❌ Error: ${error.message}`);
+	});
+
+
 	setInterval(checkForUpdates, 5000);
 
 });
 
 function loadFiles() {
-	fetch('/CodeEditorDemo/files?action=list')
+
+	let fileListContainer = document.querySelector(".container");
+	let fileList = document.getElementById("file-list");
+
+	// Ensure the "Create File" button is added only once
+	if (!document.querySelector(".create-file-btn")) {
+		let createFileButton = document.createElement("button");
+		createFileButton.innerText = "➕ Create a File";
+		createFileButton.classList.add("create-file-btn");
+		createFileButton.onclick = createNewFile;
+
+		fileListContainer.insertBefore(createFileButton, fileListContainer.firstChild);
+	}
+
+	// Clear only the existing
+
+	fetch(`/CodeEditorDemo/files?action=list&userName=${username}`)
 		.then(response => response.json())
 		.then(files => {
 			let fileList = document.getElementById('file-list');
@@ -38,6 +79,13 @@ function loadFiles() {
 				let li = document.createElement("li");
 				li.textContent = file;
 				li.setAttribute("data-filename", file);
+				li.setAttribute("title", "");  // Disable default tooltip
+
+				// Create custom tooltip
+				let tooltip = document.createElement("span");
+				tooltip.classList.add("tooltip");
+				tooltip.textContent = file;
+				li.appendChild(tooltip);
 				li.onclick = () => {
 					loadFile(file);
 
@@ -48,6 +96,26 @@ function loadFiles() {
 			});
 		})
 		.catch(error => console.error("Error loading files:", error));
+}
+
+function createNewFile() {
+	let fileName = prompt("Enter new file name:");
+	if (!fileName) return;
+
+	let allowed_users = prompt("Enter the allowed User's Username (comma separated)");
+	if (!allowed_users) return;
+
+	fetch('/CodeEditorDemo/files?action=create', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ name: fileName, user: username, code: "", allowedUsers: allowed_users }) // Empty content for a new file
+	})
+		.then(response => response.json())
+		.then(data => {
+			alert(`✅ File '${fileName}' created successfully!`);
+			loadFiles(); // Refresh file list
+		})
+		.catch(error => console.error("Error creating file:", error));
 }
 
 
@@ -103,7 +171,7 @@ function checkForUpdates() {
 }
 
 function saveFile(fileName, code) {
-	fetch('/CodeEditorDemo/files', {
+	fetch('/CodeEditorDemo/files?action=update', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ user: username, name: fileName, code: code })

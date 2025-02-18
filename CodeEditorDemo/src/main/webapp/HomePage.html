@@ -1,90 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Code Editor</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs/loader.js"></script>
-    <script defer src="editor.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #1e1e1e;
-            color: white;
-        }
-        h2 {
-            text-align: center;
-        }
-        .container {
-            display: flex;
-            gap: 20px;
-        }
-        #file-list {
-            width: 200px;
-            background: #252526;
-            padding: 10px;
-            border-radius: 5px;
-            height: 500px;
-            overflow-y: auto;
-        }
-        #file-list li {
-            list-style: none;
-            padding: 8px;
-            cursor: pointer;
-            border-bottom: 1px solid #3c3c3c;
-        }
-        #file-list li:hover {
-            background-color: #444;
-        }
-        #editor-container {
-            flex-grow: 1;
-            height: 500px;
-        }
-        #sync-button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            background: #007acc;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        #sync-button:hover {
-            background: #005a9e;
-        }
-        #sync-info {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        .selected-file {
-		    background-color: #3498db; /* Blue highlight */
-		    color: white;
-		    font-weight: bold;
-		    border-radius: 5px;
-		    padding: 5px;
-		}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real-Time Code Editor</title>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs/loader.js"></script>
+<script defer src="editor.js"></script>
+<style>
+body {
+	font-family: Arial, sans-serif;
+	margin: 0;
+	padding: 20px;
+	background-color: #1e1e1e;
+	color: white;
+}
+
+h2 {
+	text-align: center;
+}
+
+.container {
+	display: flex;
+	gap: 20px;
+}
+#file-list {
+    list-style: none;
+    padding: 0;
+    max-height: 300px; /* Limit height if many files */
+    overflow-y: auto;
+}
+
+#file-list li {
+    white-space: nowrap;  
+    overflow: hidden;  
+    text-overflow: ellipsis;  
+    width: 220px;  /* Adjust as needed */
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.3s;
+    position: relative;
+}
+
+#file-list li:hover {
+    background-color: #f0f0f0;
+}
+
+/* Tooltip Styling */
+.tooltip {
+    position: absolute;
+    left: 100%;  /* Position beside the filename */
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#file-list li:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+
+
+#editor-container {
+	flex-grow: 1;
+	height: 500px;
+}
+
+#sync-button {
+	display: block;
+	width: 100%;
+	padding: 10px;
+	margin-top: 10px;
+	background: #007acc;
+	color: white;
+	border: none;
+	cursor: pointer;
+	font-size: 16px;
+}
+
+#sync-button:hover {
+	background: #005a9e;
+}
+
+#sync-info {
+	text-align: center;
+	margin-top: 10px;
+	font-size: 14px;
+}
+
+.selected-file {
+	background-color: #3498db; /* Blue highlight */
+	color: white;
+	font-weight: bold;
+	border-radius: 5px;
+	padding: 5px;
+}
+
+#button-container {
+	display: flex;
+	gap: 10px; /* Space between buttons */
+	margin-top: 10px;
+}
+
+#button-container button {
+	padding: 8px 16px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	font-size: 14px;
+}
+
+#sync-button {
+	background-color: #007bff;
+	color: white;
+}
+
+#run-button {
+	background-color: #28a745;
+	color: white;
+}
+
+#run-button:hover {
+	background: #1e7e34;
+}
+
+#output {
+	background: #1e1e1e;
+	color: #00ff00;
+	padding: 10px;
+	border-radius: 5px;
+	font-family: monospace;
+	margin-top: 10px;
+	white-space: pre-wrap;
+}
+
+.create-file-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 5px;
+}
+
+.create-file-btn:hover {
+    background-color: #218838;
+}
+</style>
 </head>
 <body>
 
-    <h2>Real-Time Code Editor</h2>
+	<h2>Real-Time Code Editor</h2>
 
-    <div class="container">
-        <ul id="file-list">
-            <li>Loading files...</li>
-        </ul>
-        <div id="editor-container"></div>
-    </div>
+	<div class="container" >
+		<ul id="file-list">
+			<li>Loading files...</li>
+		</ul>
+		<div id="editor-container"></div>
+	</div>
 
-    <button id="sync-button">Sync</button>
-    <p id="sync-info"></p>
-    
-    <script type="text/javascript" src="script.js"></script>
+	<div id="button-container">
+		<button id="sync-button">🔄 Sync</button>
+		<button id="run-button">▶️ Run Code</button>
+	</div>
+	<pre id="output"></pre>
+
+	<p id="sync-info"></p>
+
+	<script type="text/javascript" src="script.js"></script>
 
 </body>
 </html>
